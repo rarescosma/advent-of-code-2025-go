@@ -8,27 +8,20 @@ import (
 
 const MODULUS = 100
 
-// Hello rust!
-func divRem(dividend int, divisor int) (int, int) {
-	return dividend / divisor, dividend % divisor
-}
-
 // Spins the wheel in the "Right" direction.
 //
 // Returns the new value of the wheel and the number of times it passed through 0
 func youSpinMeRightRound(wheel int, spin int) (int, int) {
-	zeros, wheel := divRem(wheel+spin, MODULUS)
-	return wheel, zeros
+	return (wheel + spin) % MODULUS, (wheel + spin) / MODULUS
 }
 
 // Spins the wheel in the "Left" direction.
 //
 // Returns the new value of the wheel and the number of times it passed through 0
 func youSpinMeLeftRound(wheel int, spin int) (int, int) {
-	zeros, newWheel := divRem(wheel-spin, MODULUS)
-	zeros = -zeros
+	newWheel, zeros := (wheel-spin)%MODULUS, (spin-wheel)/MODULUS
 	if newWheel <= 0 && wheel != 0 {
-		zeros += 1
+		zeros++
 	}
 	if newWheel < 0 {
 		newWheel += MODULUS
@@ -38,9 +31,6 @@ func youSpinMeLeftRound(wheel int, spin int) (int, int) {
 
 func main() {
 	file, _ := os.Open("inputs/01.in")
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(file)
 	scanner := bufio.NewScanner(file)
 
 	wheel, p1, p2, zeros := 50, 0, 0, 0
@@ -52,11 +42,11 @@ func main() {
 
 		if direction == 'R' {
 			wheel, zeros = youSpinMeRightRound(wheel, spin)
-			p2 += zeros
 		} else {
 			wheel, zeros = youSpinMeLeftRound(wheel, spin)
-			p2 += zeros
 		}
+
+		p2 += zeros
 		if wheel == 0 {
 			p1 += 1
 		}
