@@ -6,34 +6,42 @@ import (
 	"strconv"
 )
 
-const MODULUS = 100
-
-// Spins the wheel in the "Right" direction.
-//
-// Returns the new value of the wheel and the number of times it passed through 0
-func youSpinMeRightRound(wheel int, spin int) (int, int) {
-	return (wheel + spin) % MODULUS, (wheel + spin) / MODULUS
+type Dial struct {
+	pos int
+	max int
 }
 
-// Spins the wheel in the "Left" direction.
+// SpinRight spins the dial in the "Right" direction.
 //
-// Returns the new value of the wheel and the number of times it passed through 0
-func youSpinMeLeftRound(wheel int, spin int) (int, int) {
-	newWheel, zeros := (wheel-spin)%MODULUS, (spin-wheel)/MODULUS
-	if newWheel <= 0 && wheel != 0 {
+// Returns the number of times it passed through 0
+func (d *Dial) SpinRight(spin int) int {
+	newPos, zeros := (d.pos+spin)%d.max, (d.pos+spin)/d.max
+	d.pos = newPos
+	return zeros
+}
+
+// SpinLeft Spins the dial in the "Left" direction.
+//
+// Returns the number of times it passed through 0
+func (d *Dial) SpinLeft(spin int) int {
+	newPos, zeros := (d.pos-spin)%d.max, (spin-d.pos)/d.max
+	if newPos <= 0 && d.pos != 0 {
 		zeros++
 	}
-	if newWheel < 0 {
-		newWheel += MODULUS
+	if newPos < 0 {
+		newPos += d.max
 	}
-	return newWheel, zeros
+	d.pos = newPos
+	return zeros
 }
 
 func main() {
 	file, _ := os.Open("inputs/01.in")
 	scanner := bufio.NewScanner(file)
 
-	wheel, p1, p2, zeros := 50, 0, 0, 0
+	dial := Dial{pos: 50, max: 100}
+
+	p1, p2 := 0, 0
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -41,13 +49,12 @@ func main() {
 		spin, _ := strconv.Atoi(line[1:])
 
 		if direction == 'R' {
-			wheel, zeros = youSpinMeRightRound(wheel, spin)
+			p2 += dial.SpinRight(spin)
 		} else {
-			wheel, zeros = youSpinMeLeftRound(wheel, spin)
+			p2 += dial.SpinLeft(spin)
 		}
 
-		p2 += zeros
-		if wheel == 0 {
+		if dial.pos == 0 {
 			p1 += 1
 		}
 	}
