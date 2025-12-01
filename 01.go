@@ -8,9 +8,32 @@ import (
 
 const MODULUS = 100
 
-func zeros(wheel int, antiWheel int, spin int) (int, int, int) {
-	newWheel := wheel + spin
-	return newWheel % MODULUS, (antiWheel + MODULUS - (spin % MODULUS)) % MODULUS, newWheel / MODULUS
+// Hello rust!
+func divRem(dividend int, divisor int) (int, int) {
+	return dividend / divisor, dividend % divisor
+}
+
+// Spins the wheel in the "Right" direction.
+//
+// Returns the new value of the wheel and the number of times it passed through 0
+func youSpinMeRightRound(wheel int, spin int) (int, int) {
+	zeros, wheel := divRem(wheel+spin, MODULUS)
+	return wheel, zeros
+}
+
+// Spins the wheel in the "Left" direction.
+//
+// Returns the new value of the wheel and the number of times it passed through 0
+func youSpinMeLeftRound(wheel int, spin int) (int, int) {
+	zeros, newWheel := divRem(wheel-spin, MODULUS)
+	zeros = -zeros
+	if newWheel <= 0 && wheel != 0 {
+		zeros += 1
+	}
+	if newWheel < 0 {
+		newWheel += MODULUS
+	}
+	return newWheel, zeros
 }
 
 func main() {
@@ -20,31 +43,21 @@ func main() {
 	}(file)
 	scanner := bufio.NewScanner(file)
 
-	/*
-	   The math is much simpler for the positive case, so just
-	   spin two wheels in reverse directions:
-	   - wR spins R on R, L on L
-	   - wL spins L on R, R on L
-
-	   When spinning right, count 0 passes for wR only.
-	   When spinning left, count 0 passes for wL only.
-	   Sum the contributions.
-	*/
-	wR, wL, p1, p2, rightZeros, leftZeros := 50, 50, 0, 0, 0, 0
+	wheel, p1, p2, zeros := 50, 0, 0, 0
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		direction := string(line[0])
+		direction := line[0]
 		spin, _ := strconv.Atoi(line[1:])
 
-		if direction == "R" {
-			wR, wL, rightZeros = zeros(wR, wL, spin)
-			p2 += rightZeros
+		if direction == 'R' {
+			wheel, zeros = youSpinMeRightRound(wheel, spin)
+			p2 += zeros
 		} else {
-			wL, wR, leftZeros = zeros(wL, wR, spin)
-			p2 += leftZeros
+			wheel, zeros = youSpinMeLeftRound(wheel, spin)
+			p2 += zeros
 		}
-		if wR == 0 {
+		if wheel == 0 {
 			p1 += 1
 		}
 	}
