@@ -21,8 +21,8 @@ func main() {
 	println("p2:", p2)
 }
 
-func digitIndexes(b []byte) map[int][]int {
-	ret := make(map[int][]int, 10)
+func digitIndexes(b []byte) [][]int {
+	ret := make([][]int, 10)
 	for i, c := range b {
 		digit := int(c - '0')
 		ret[digit] = append(ret[digit], i)
