@@ -29,10 +29,10 @@ func main() {
 	file, _ := os.Open("inputs/05.in")
 	scanner := bufio.NewScanner(file)
 
-	intervals := make(map[int]Interval)
+	var intervals []Interval
 	var nums []uint64
 
-	parsingRanges, index := true, 0
+	parsingRanges := true
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.TrimSpace(line) == "" {
@@ -41,8 +41,7 @@ func main() {
 		}
 		if parsingRanges {
 			parts := strings.Split(line, "-")
-			intervals[index] = Interval{intPlease(parts[0]), intPlease(parts[1])}
-			index++
+			intervals = append(intervals, Interval{intPlease(parts[0]), intPlease(parts[1])})
 		} else {
 			nums = append(nums, intPlease(line))
 		}
@@ -71,8 +70,9 @@ func main() {
 	println("p2:", p2)
 }
 
-func consolidate(intervals map[int]Interval) (map[int]Interval, bool) {
-	replaced, ret, index := make(map[int]bool), make(map[int]Interval), 0
+func consolidate(intervals []Interval) ([]Interval, bool) {
+	var ret []Interval
+	replaced := make(map[int]bool)
 
 	// Loop through all distinct pairs of intervals and check whether they overlap.
 	// If they do, mark them as replaced and insert the union interval in the return map.
@@ -83,17 +83,15 @@ func consolidate(intervals map[int]Interval) (map[int]Interval, bool) {
 				continue
 			}
 			if min(i1.end, i2.end) >= max(i1.start, i2.start) {
-				ret[index] = Interval{min(i1.start, i2.start), max(i1.end, i2.end)}
-				index++
+				ret = append(ret, Interval{min(i1.start, i2.start), max(i1.end, i2.end)})
 				replaced[n], replaced[m] = true, true
 			}
 		}
 	}
 
-	for n, ival := range intervals {
+	for n, interval := range intervals {
 		if !replaced[n] {
-			ret[index] = ival
-			index++
+			ret = append(ret, interval)
 		}
 	}
 
