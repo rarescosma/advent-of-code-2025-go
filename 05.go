@@ -32,8 +32,7 @@ func main() {
 	intervals := make(map[int]Interval)
 	var nums []uint64
 
-	parsingRanges := true
-	index := 0
+	parsingRanges, index := true, 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.TrimSpace(line) == "" {
@@ -49,10 +48,15 @@ func main() {
 		}
 	}
 
+	consolidating := true
+	for consolidating {
+		intervals, consolidating = consolidate(intervals)
+	}
+
 	p1 := 0
 	for _, num := range nums {
-		for _, ival := range intervals {
-			if ival.contains(num) {
+		for _, interval := range intervals {
+			if interval.contains(num) {
 				p1++
 				break
 			}
@@ -60,24 +64,21 @@ func main() {
 	}
 	println("p1:", p1)
 
-	consolidating := true
-	for consolidating {
-		intervals, consolidating = consolidate(intervals)
-	}
 	p2 := uint64(0)
-	for _, ival := range intervals {
-		p2 += ival.length()
+	for _, interval := range intervals {
+		p2 += interval.length()
 	}
 	println("p2:", p2)
 }
 
 func consolidate(intervals map[int]Interval) (map[int]Interval, bool) {
-	replaced := make(map[int]bool)
-	ret := make(map[int]Interval)
-	index := 0
+	replaced, ret, index := make(map[int]bool), make(map[int]Interval), 0
 
+	// Loop through all distinct pairs of intervals and check whether they overlap.
+	// If they do, mark them as replaced and insert the union interval in the return map.
 	for n, i1 := range intervals {
 		for m, i2 := range intervals {
+			// Don't look at an interval pair if either of its members has been marked as replaced.
 			if m <= n || replaced[n] || replaced[m] {
 				continue
 			}
@@ -88,11 +89,13 @@ func consolidate(intervals map[int]Interval) (map[int]Interval, bool) {
 			}
 		}
 	}
+
 	for n, ival := range intervals {
 		if !replaced[n] {
 			ret[index] = ival
 			index++
 		}
 	}
+
 	return ret, len(replaced) > 0
 }
