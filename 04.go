@@ -1,47 +1,16 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"os"
 )
-
-type Pos struct {
-	row int
-	col int
-}
-
-type Map struct {
-	buf     [][]byte
-	numRows int
-	numCols int
-}
-
-func (m *Map) Get(p Pos) byte {
-	return m.buf[p.row][p.col]
-}
-
-func (m *Map) Set(p Pos, b byte) {
-	m.buf[p.row][p.col] = b
-}
-
-func MapFromScanner(scanner *bufio.Scanner) Map {
-	var buf [][]byte
-	numRows := 0
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		buf = append(buf, make([]byte, 0))
-		buf[numRows] = append(buf[numRows], line...)
-		numRows++
-	}
-	numCols := len(buf[0])
-	return Map{buf, numRows, numCols}
-}
 
 func main() {
 	file, _ := os.Open("inputs/04.in")
 	scanner := bufio.NewScanner(file)
 
-	theMap := MapFromScanner(scanner)
+	theMap := lib.NewByteMap(scanner)
 
 	p1 := removeRolls(&theMap)
 	p2, removed := p1, p1
@@ -54,12 +23,12 @@ func main() {
 	println("p2:", p2)
 }
 
-func removeRolls(m *Map) int {
+func removeRolls(m *lib.Map[byte]) int {
 	ret := 0
-	var toRemove []Pos
-	for x := 0; x < m.numCols; x++ {
-		for y := 0; y < m.numRows; y++ {
-			if m.Get(Pos{x, y}) != '@' {
+	var toRemove []lib.Pos
+	for x := 0; x < m.NumCols; x++ {
+		for y := 0; y < m.NumRows; y++ {
+			if m.Get(lib.Pos{Row: x, Col: y}) != '@' {
 				continue
 			}
 			neighs := 0
@@ -69,13 +38,13 @@ func removeRolls(m *Map) int {
 						continue
 					}
 					nx, ny := x+dx, y+dy
-					if m.numRows > nx && nx >= 0 && m.numCols > ny && ny >= 0 && m.Get(Pos{nx, ny}) == '@' {
+					if m.NumRows > nx && nx >= 0 && m.NumCols > ny && ny >= 0 && m.Get(lib.Pos{Row: nx, Col: ny}) == '@' {
 						neighs += 1
 					}
 				}
 			}
 			if neighs < 4 {
-				toRemove = append(toRemove, Pos{x, y})
+				toRemove = append(toRemove, lib.Pos{Row: x, Col: y})
 				ret += 1
 			}
 		}
