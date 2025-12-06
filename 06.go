@@ -9,7 +9,12 @@ import (
 	"unicode"
 )
 
-func intMapFromScanner(scanner *bufio.Scanner) (lib.Map[int], []string) {
+func scanFile(f string) *bufio.Scanner {
+	file, _ := os.Open(f)
+	return bufio.NewScanner(file)
+}
+
+func parseInput(scanner *bufio.Scanner) (lib.Map[int], []string) {
 	var buf [][]int
 	var ops string
 	numRows, parsingNums := 0, true
@@ -32,16 +37,6 @@ func intMapFromScanner(scanner *bufio.Scanner) (lib.Map[int], []string) {
 	return lib.Map[int]{Buf: buf, NumRows: numRows, NumCols: numCols}, opsPlease(ops)
 }
 
-func nonEmpties[T any](s string, f func(string) T) []T {
-	var ret []T
-	for _, el := range strings.Split(s, " ") {
-		if el != "" {
-			ret = append(ret, f(el))
-		}
-	}
-	return ret
-}
-
 func intsPlease(s string) []int {
 	return nonEmpties(s, func(s string) int {
 		res, _ := strconv.Atoi(s)
@@ -55,78 +50,61 @@ func opsPlease(s string) []string {
 	})
 }
 
-func scanFile(f string) *bufio.Scanner {
-	file, _ := os.Open(f)
-	return bufio.NewScanner(file)
+func nonEmpties[T any](s string, f func(string) T) []T {
+	var ret []T
+	for _, el := range strings.Split(s, " ") {
+		if el != "" {
+			ret = append(ret, f(el))
+		}
+	}
+	return ret
+}
+
+func solve(terms []int, op string) int {
+	ret := 0
+	apply := func(a, b int) int { return a + b }
+	if op == "*" {
+		ret = 1
+		apply = func(a, b int) int { return a * b }
+	}
+	for _, term := range terms {
+		ret = apply(ret, term)
+	}
+	return ret
 }
 
 func main() {
 	fName := "inputs/06.in"
-	var intMap lib.Map[int]
-	intMap, ops := intMapFromScanner(scanFile(fName))
-	intMap = intMap.Transpose()
+	intMap, ops := parseInput(scanFile(fName))
+	intMap.Transpose()
 
 	p1 := 0
 	for r, op := range ops {
-		part := 0
-		if op == "*" {
-			part = 1
-			for _, el := range intMap.GetRow(r) {
-				part = part * el
-			}
-		} else {
-			for _, el := range intMap.GetRow(r) {
-				part = part + el
-			}
-		}
-		p1 += part
+		p1 += solve(intMap.GetRow(r), op)
 	}
 
 	println("p1:", p1)
 
-	var byteMap lib.Map[byte]
-	byteMap = lib.NewByteMap(scanFile(fName))
-	maxRow := 0
-	for r := range byteMap.NumRows {
-		maxRow = max(maxRow, len(byteMap.Buf[r]))
-	}
-	for r := range byteMap.NumRows {
-		missing := maxRow - len(byteMap.Buf[r])
-		for x := missing; x > 0; x-- {
-			byteMap.Append(r, ' ')
-		}
-	}
-	byteMap = byteMap.Transpose()
+	byteMap := lib.NewByteMap(scanFile(fName))
+	byteMap.EqualizeRows(' ')
+	byteMap.Transpose()
 
-	idx := 0
-	op := ops[idx]
-	part := 0
-	if op == "*" {
-		part = 1
-	}
-	p2 := 0
+	p2, idx := 0, 0
+	var terms []int
 	for r := range byteMap.NumRows {
 		row := strings.TrimFunc(string(byteMap.GetRow(r)[:]), func(r rune) bool {
-			return r == '*' || r == '+' || unicode.IsSpace(r)
+			return !unicode.IsDigit(r)
 		})
-		if row != "" {
-			term, _ := strconv.Atoi(row)
-			if op == "*" {
-				part = part * term
-			} else {
-				part = part + term
-			}
-		} else {
-			p2 += part
+		if row == "" {
+			p2 += solve(terms, ops[idx])
+			terms = []int{}
 			idx++
-			op = ops[idx]
-			if op == "*" {
-				part = 1
-			} else {
-				part = 0
-			}
+		} else {
+			term, _ := strconv.Atoi(row)
+			terms = append(terms, term)
 		}
 	}
-	p2 += part
+	p2 += solve(terms, ops[idx])
+
 	println("p2:", p2)
 }

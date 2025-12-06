@@ -39,15 +39,19 @@ func (m *Map[C]) Set(p Pos, b C) {
 	m.Buf[p.Row][p.Col] = b
 }
 
-func (m *Map[C]) Append(row int, b C) {
-	m.Buf[row] = append(m.Buf[row], b)
+func (m *Map[C]) EqualizeRows(unit C) {
+	for r := range m.NumRows {
+		for range m.NumCols - len(m.Buf[r]) {
+			m.Buf[r] = append(m.Buf[r], unit)
+		}
+	}
 }
 
 func (m *Map[C]) GetRow(r int) []C {
 	return m.Buf[r]
 }
 
-func (m *Map[C]) Transpose() Map[C] {
+func (m *Map[C]) Transpose() {
 	var buf [][]C
 	for c := range m.NumCols {
 		buf = append(buf, make([]C, 0))
@@ -55,5 +59,5 @@ func (m *Map[C]) Transpose() Map[C] {
 			buf[c] = append(buf[c], m.Get(Pos{Row: r, Col: c}))
 		}
 	}
-	return Map[C]{Buf: buf, NumRows: m.NumCols, NumCols: m.NumRows}
+	*m = Map[C]{Buf: buf, NumRows: m.NumCols, NumCols: m.NumRows}
 }
