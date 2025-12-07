@@ -17,7 +17,7 @@ func scanFile(f string) *bufio.Scanner {
 func parseInput(scanner *bufio.Scanner) (lib.Map[int], []string) {
 	var buf [][]int
 	var ops string
-	numRows, parsingNums := 0, true
+	parsingNums := true
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -25,29 +25,21 @@ func parseInput(scanner *bufio.Scanner) (lib.Map[int], []string) {
 			parsingNums = false
 		}
 		if parsingNums {
-			buf = append(buf, make([]int, 0))
-			buf[numRows] = append(buf[numRows], intsPlease(line)...)
-			numRows++
+			buf = append(buf, intsPlease(line))
 		} else {
 			ops = scanner.Text()
 			break
 		}
 	}
-	numCols := len(buf[0])
-	return lib.Map[int]{Buf: buf, NumRows: numRows, NumCols: numCols}, opsPlease(ops)
+	return lib.Map[int]{Buf: buf, NumRows: len(buf), NumCols: len(buf[0])}, opsPlease(ops)
 }
 
 func intsPlease(s string) []int {
-	return nonEmpties(s, func(s string) int {
-		res, _ := strconv.Atoi(s)
-		return res
-	})
+	return nonEmpties(s, func(s string) int { res, _ := strconv.Atoi(s); return res })
 }
 
 func opsPlease(s string) []string {
-	return nonEmpties(s, func(s string) string {
-		return s
-	})
+	return nonEmpties(s, func(s string) string { return s })
 }
 
 func nonEmpties[T any](s string, f func(string) T) []T {
@@ -92,7 +84,7 @@ func main() {
 	p2, idx := 0, 0
 	var terms []int
 	for r := range byteMap.NumRows {
-		row := strings.TrimFunc(string(byteMap.GetRow(r)[:]), func(r rune) bool {
+		row := strings.TrimFunc(string(byteMap.GetRow(r)), func(r rune) bool {
 			return !unicode.IsDigit(r)
 		})
 		if row == "" {
