@@ -28,7 +28,7 @@ func removeRolls(m *lib.Map[byte]) int {
 	var toRemove []lib.Pos
 	for x := 0; x < m.NumCols; x++ {
 		for y := 0; y < m.NumRows; y++ {
-			if m.Get(lib.Pos{Row: x, Col: y}) != '@' {
+			if m.Get(x, y) != '@' {
 				continue
 			}
 			neighs := 0
@@ -38,7 +38,7 @@ func removeRolls(m *lib.Map[byte]) int {
 						continue
 					}
 					nx, ny := x+dx, y+dy
-					if m.NumRows > nx && nx >= 0 && m.NumCols > ny && ny >= 0 && m.Get(lib.Pos{Row: nx, Col: ny}) == '@' {
+					if m.NumRows > nx && nx >= 0 && m.NumCols > ny && ny >= 0 && m.Get(nx, ny) == '@' {
 						neighs += 1
 					}
 				}
@@ -50,7 +50,7 @@ func removeRolls(m *lib.Map[byte]) int {
 		}
 	}
 	for _, pos := range toRemove {
-		m.Set(pos, 'x')
+		m.Set(pos.Row, pos.Col, 'x')
 	}
 	return ret
 }

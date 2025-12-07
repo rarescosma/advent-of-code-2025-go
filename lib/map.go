@@ -19,30 +19,30 @@ type Map[c Cell] struct {
 
 func NewByteMap(scanner *bufio.Scanner) Map[byte] {
 	var buf [][]byte
-	numRows := 0
 	numCols := 0
 	for scanner.Scan() {
 		line := scanner.Bytes()
-		buf = append(buf, make([]byte, 0))
-		buf[numRows] = append(buf[numRows], line...)
-		numCols = max(numCols, len(buf[numRows]))
-		numRows++
+		lineLen := len(line)
+		numCols = max(numCols, lineLen)
+		row := make([]byte, lineLen)
+		copy(row, line)
+		buf = append(buf, row)
 	}
-	return Map[byte]{Buf: buf, NumRows: numRows, NumCols: numCols}
+	return Map[byte]{Buf: buf, NumRows: len(buf), NumCols: numCols}
 }
 
-func (m *Map[C]) Get(p Pos) C {
-	return m.Buf[p.Row][p.Col]
+func (m *Map[C]) Get(r, c int) C {
+	return m.Buf[r][c]
 }
 
-func (m *Map[C]) Set(p Pos, b C) {
-	m.Buf[p.Row][p.Col] = b
+func (m *Map[C]) Set(r, c int, b C) {
+	m.Buf[r][c] = b
 }
 
-func (m *Map[C]) EqualizeRows(unit C) {
+func (m *Map[C]) EqualizeRows(filler C) {
 	for r := range m.NumRows {
 		for range m.NumCols - len(m.Buf[r]) {
-			m.Buf[r] = append(m.Buf[r], unit)
+			m.Buf[r] = append(m.Buf[r], filler)
 		}
 	}
 }
@@ -56,7 +56,7 @@ func (m *Map[C]) Transpose() {
 	for c := range m.NumCols {
 		buf = append(buf, make([]C, 0))
 		for r := range m.NumRows {
-			buf[c] = append(buf[c], m.Get(Pos{Row: r, Col: c}))
+			buf[c] = append(buf[c], m.Get(r, c))
 		}
 	}
 	*m = Map[C]{Buf: buf, NumRows: m.NumCols, NumCols: m.NumRows}
