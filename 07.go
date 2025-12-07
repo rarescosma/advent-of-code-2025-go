@@ -10,8 +10,8 @@ import (
 type NodeIdx = int
 
 type Graph struct {
-	m    *lib.Map[byte]
-	memo map[NodeIdx]int
+	m        *lib.Map[byte]
+	numPaths map[NodeIdx]int
 }
 
 func newGraph(m *lib.Map[byte]) Graph {
@@ -27,7 +27,7 @@ func (g *Graph) addNode(r, c int) int {
 		if upper != '|' {
 			// If we hit the source we must be the first splitter, so there's only 1 path.
 			if upper == 'S' {
-				g.memo[idx] = 1
+				g.numPaths[idx] = 1
 			}
 			break
 		}
@@ -38,14 +38,14 @@ func (g *Graph) addNode(r, c int) int {
 		// It's therefore guaranteed that we've already calculated the number of paths
 		// to all the splitters above the current splitter.
 		if c-1 >= 0 && g.m.Get(rowAbove, c-1) == '^' {
-			g.memo[idx] += g.memo[g.nodeIndex(rowAbove, c-1)]
+			g.numPaths[idx] += g.numPaths[g.nodeIndex(rowAbove, c-1)]
 		}
 		if c+1 < g.m.NumCols && g.m.Get(rowAbove, c+1) == '^' {
-			g.memo[idx] += g.memo[g.nodeIndex(rowAbove, c+1)]
+			g.numPaths[idx] += g.numPaths[g.nodeIndex(rowAbove, c+1)]
 		}
 	}
 
-	return g.memo[idx]
+	return g.numPaths[idx]
 }
 
 func (g *Graph) nodeIndex(r, c int) NodeIdx {
@@ -79,7 +79,7 @@ func main() {
 		}
 	}
 
-	println("p1:", len(graph.memo))
+	println("p1:", len(graph.numPaths))
 
 	p2 := 0
 	lastRow := theMap.NumRows - 1
