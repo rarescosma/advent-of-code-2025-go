@@ -15,30 +15,33 @@ type Graph struct {
 }
 
 func newGraph(m *lib.Map[byte]) Graph {
-	return Graph{
-		m:    m,
-		memo: make(map[NodeIdx]int),
-	}
+	return Graph{m, make(map[NodeIdx]int)}
 }
 
 func (g *Graph) addNode(r, c int) int {
 	idx := g.nodeIndex(r, c)
 
-	for row := r - 1; row >= 0; row-- {
-		upper := g.m.Get(row, c)
-		if upper == 'S' {
-			g.memo[idx] = 1
-		} else if upper != '|' {
+	for rowAbove := r - 1; rowAbove >= 0; rowAbove-- {
+		upper := g.m.Get(rowAbove, c)
+		// Walk up the beam.
+		if upper != '|' {
+			// If we hit the source we must be the first splitter, so there's only 1 path.
+			if upper == 'S' {
+				g.memo[idx] = 1
+			}
 			break
 		}
-		// There's an implicit topological sort of splitters, so by the time we reach
-		// the node with index 'idx' it's guaranteed that we've already calculated
-		// the number of paths for its upper node.
-		if c-1 >= 0 && g.m.Get(row, c-1) == '^' {
-			g.memo[idx] += g.memo[g.nodeIndex(row, c-1)]
+
+		// Splitters are added to the graph from top to bottom (with increasing row numbers),
+		// which generates an implicit topological ordering.
+		//
+		// It's therefore guaranteed that we've already calculated the number of paths
+		// to all the splitters above the current splitter.
+		if c-1 >= 0 && g.m.Get(rowAbove, c-1) == '^' {
+			g.memo[idx] += g.memo[g.nodeIndex(rowAbove, c-1)]
 		}
-		if c+1 < g.m.NumCols && g.m.Get(row, c+1) == '^' {
-			g.memo[idx] += g.memo[g.nodeIndex(row, c+1)]
+		if c+1 < g.m.NumCols && g.m.Get(rowAbove, c+1) == '^' {
+			g.memo[idx] += g.memo[g.nodeIndex(rowAbove, c+1)]
 		}
 	}
 
@@ -53,13 +56,11 @@ func main() {
 	file, _ := os.Open("inputs/07.in")
 	scanner := bufio.NewScanner(file)
 	theMap := lib.NewByteMap(scanner)
-
-	// Assumption: the first splitter is always on row 2, so set row 1 to '|' to hit it.
-	sCol := slices.Index(theMap.GetRow(0), 'S')
-	theMap.Set(1, sCol, '|')
-
 	graph := newGraph(&theMap)
-	graph.addNode(0, sCol)
+
+	// Assumption: the first splitter is always directly below the source on row 2,
+	// so set row 1 to '|' to hit it.
+	theMap.Set(1, slices.Index(theMap.GetRow(0), 'S'), '|')
 
 	for row := 2; row < theMap.NumRows; row++ {
 		for col := range theMap.NumCols {
