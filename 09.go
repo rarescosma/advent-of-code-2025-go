@@ -2,8 +2,9 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -18,22 +19,22 @@ const (
 )
 
 type Pt struct {
-	X, Y int
+	x, y int
 }
 
 func PtFromLine(line string) Pt {
 	parts := strings.Split(line, ",")
 	x, _ := strconv.Atoi(parts[0])
 	y, _ := strconv.Atoi(parts[1])
-	return Pt{X: x, Y: y}
+	return Pt{x, y}
 }
 
 type Ival struct {
-	Start, End int
+	start, end int
 }
 
 func (iv Ival) Intersects(other Ival) bool {
-	return min(iv.End, other.End) >= max(iv.Start, other.Start)
+	return min(iv.end, other.end) >= max(iv.start, other.start)
 }
 
 func (iv Ival) Sub(other Ival) []Ival {
@@ -42,63 +43,67 @@ func (iv Ival) Sub(other Ival) []Ival {
 	}
 
 	common := iv.Common(other)
-	if common.Start <= iv.Start && common.End >= iv.End {
+	if common.start <= iv.start && common.end >= iv.end {
 		return nil
 	}
 
 	ret := make([]Ival, 0, 2)
-	if common.Start > iv.Start {
-		ret = append(ret, Ival{iv.Start, common.Start - 1})
+	if common.start > iv.start {
+		ret = append(ret, Ival{iv.start, common.start - 1})
 	}
-	if common.End < iv.End {
-		ret = append(ret, Ival{common.End + 1, iv.End})
+	if common.end < iv.end {
+		ret = append(ret, Ival{common.end + 1, iv.end})
 	}
 	return ret
 }
 
 func (iv Ival) Common(other Ival) Ival {
-	return Ival{max(iv.Start, other.Start), min(iv.End, other.End)}
+	return Ival{max(iv.start, other.start), min(iv.end, other.end)}
 }
 
 type Line struct {
-	Start, End Pt
-	Dir        Dir
-	interval   Ival
+	interval Ival
+	fixed    int
+	dir      Dir
 }
 
 func LineFromPoints(p1, p2 Pt) Line {
+	var interval Ival
+	var fixed int
 	var dir Dir
-	var iv Ival
-	if p1.X == p2.X {
-		iv = Ival{min(p1.Y, p2.Y), max(p1.Y, p2.Y)}
-		if p2.Y > p1.Y {
+
+	if p1.x == p2.x {
+		interval = Ival{min(p1.y, p2.y), max(p1.y, p2.y)}
+		fixed = p1.x
+		if p2.y > p1.y {
 			dir = UP
 		} else {
 			dir = DOWN
 		}
 	} else {
-		iv = Ival{min(p1.X, p2.X), max(p1.X, p2.X)}
-		if p2.X > p1.X {
+		interval = Ival{min(p1.x, p2.x), max(p1.x, p2.x)}
+		fixed = p1.y
+		if p2.x > p1.x {
 			dir = RIGHT
 		} else {
 			dir = LEFT
 		}
 	}
-	return Line{Start: p1, End: p2, Dir: dir, interval: iv}
+	return Line{interval, fixed, dir}
 }
 
 type Rect struct {
-	Orig, End Pt
+	orig, end Pt
 	hIval     Ival
 	vIval     Ival
 }
 
 func RectFromCorners(c1, c2 Pt) Rect {
 	return Rect{
-		Orig:  Pt{min(c1.X, c2.X), min(c1.Y, c2.Y)},
-		End:   Pt{max(c1.X, c2.X), max(c1.Y, c2.Y)},
-		hIval: Ival{min(c1.X, c2.X), max(c1.X, c2.X)},
-		vIval: Ival{min(c1.Y, c2.Y), max(c1.Y, c2.Y)},
+		orig:  Pt{min(c1.x, c2.x), min(c1.y, c2.y)},
+		end:   Pt{max(c1.x, c2.x), max(c1.y, c2.y)},
+		hIval: Ival{min(c1.x, c2.x), max(c1.x, c2.x)},
+		vIval: Ival{min(c1.y, c2.y), max(c1.y, c2.y)},
 	}
 }
 
@@ -107,7 +112,7 @@ func (r Rect) Intersects(other Rect) bool {
 }
 
 func (r Rect) Area() int {
-	return (r.End.X - r.Orig.X + 1) * (r.End.Y - r.Orig.Y + 1)
+	return (r.end.x - r.orig.x + 1) * (r.end.y - r.orig.y + 1)
 }
 
 func main() {
@@ -120,15 +125,15 @@ func main() {
 	}
 
 	// Pre-process: normalize to 0 using the minimum coordinates
-	minX, minY := points[0].X, points[0].Y
+	minX, minY := points[0].x, points[0].y
 	for _, p := range points {
-		minX, minY = min(minX, p.X), min(minY, p.Y)
+		minX, minY = min(minX, p.x), min(minY, p.y)
 	}
 	maxX, maxY := 0, 0
 	for i := range points {
-		points[i].X -= minX
-		points[i].Y -= minY
-		maxX, maxY = max(maxX, points[i].X), max(maxY, points[i].Y)
+		points[i].x -= minX
+		points[i].y -= minY
+		maxX, maxY = max(maxX, points[i].x), max(maxY, points[i].y)
 	}
 
 	lines := make([]Line, 0, len(points)-1)
@@ -139,7 +144,7 @@ func main() {
 	// Pre-index horizontal lines by Y coordinate for fast lookup
 	linesByY := make(map[int][]Line)
 	for _, line := range filteredLines(lines, map[Dir]bool{LEFT: true, RIGHT: true}) {
-		y := line.Start.Y
+		y := line.fixed
 		linesByY[y] = append(linesByY[y], line)
 	}
 
@@ -170,7 +175,7 @@ func main() {
 
 				oppLine := oppositeLines[oppositeIdx]
 				oppIval := oppLine.interval
-				if oppLine.Start.X >= line.Start.X || !currentIval.Intersects(oppIval) {
+				if oppLine.fixed <= line.fixed || !currentIval.Intersects(oppIval) {
 					oppositeIdx++
 					queue = append(queue, currentIval)
 					continue
@@ -179,9 +184,9 @@ func main() {
 				remaining := currentIval.Sub(oppIval)
 				queue = append(queue, remaining...)
 				overlap := currentIval.Common(oppIval)
-				toRemove := Ival{oppLine.Start.X, line.Start.X}
+				toRemove := Ival{line.fixed, oppLine.fixed}
 
-				for y := overlap.Start; y <= overlap.End; y++ {
+				for y := overlap.start; y <= overlap.end; y++ {
 					updated := make([]Ival, 0, len(outsideIvals[y])*2)
 					for _, outer := range outsideIvals[y] {
 						updated = append(updated, outer.Sub(toRemove)...)
@@ -191,9 +196,17 @@ func main() {
 			}
 		}
 
-		// Subtract horizontal lines from the outside intervals. If these lines form a corner with
-		// the _opposite_ line we're casting to, they'll be shadowed, but points along these lines
-		// should still be considered "in".
+		// Subtract horizontal lines from the outside intervals. If these lines (BC) form a corner with
+		// the _opposite_ line we're casting to (AB), they'll be shadowed, but points along these lines
+		// should still be considered "in" (so the whole AC interval is "in").
+		//
+		//                │
+		//      │ ◀────── │
+		//      ▼ ◀────── ▲
+		//      │ ◀────── │
+		// ◀────┘ ◀────── │
+		// C     B      A │
+		//
 		for y := 0; y <= maxY; y++ {
 			if lines, ok := linesByY[y]; ok {
 				for _, line := range lines {
@@ -208,8 +221,7 @@ func main() {
 
 		// Consolidate outside intervals into rectangles - this reduces our predicates from ~90k to ~2k
 		outsideRects := make([]Rect, 0, maxY)
-		startY, endY := 0, 0
-		for startY <= maxY && endY <= maxY {
+		for startY, endY := 0, 0; startY <= maxY && endY <= maxY; {
 			baseIvals := outsideIvals[startY]
 			nextIvals := outsideIvals[endY]
 			if equalIntervalSlices(nextIvals, baseIvals) {
@@ -218,7 +230,7 @@ func main() {
 			}
 
 			for _, ival := range baseIvals {
-				outsideRects = append(outsideRects, RectFromCorners(Pt{ival.Start, startY}, Pt{ival.End, endY - 1}))
+				outsideRects = append(outsideRects, RectFromCorners(Pt{ival.start, startY}, Pt{ival.end, endY - 1}))
 			}
 			startY = endY
 		}
@@ -230,11 +242,11 @@ func main() {
 			for j := len(points) - 1; j > i; j-- {
 				testRect := RectFromCorners(points[i], points[j])
 				area := testRect.Area()
+
 				if area > p1 {
 					p1 = area
 				}
 
-				// Early exit if we already found a larger p2
 				if area <= p2 {
 					continue
 				}
@@ -274,13 +286,14 @@ func equalIntervalSlices(a, b []Ival) bool {
 }
 
 func opposite(d Dir) Dir {
-	return Dir((int(d) + 2) % 4)
+	return (d + 2) % 4
 }
 
 func filteredLines(lines []Line, dirs map[Dir]bool) []Line {
 	filtered := make([]Line, 0, len(lines))
+
 	for _, l := range lines {
-		if dirs[l.Dir] {
+		if dirs[l.dir] {
 			filtered = append(filtered, l)
 		}
 	}
@@ -290,12 +303,8 @@ func filteredLines(lines []Line, dirs map[Dir]bool) []Line {
 func sortedLines(lines []Line, dirs map[Dir]bool) []Line {
 	filtered := filteredLines(lines, dirs)
 
-	upDown := dirs[UP] || dirs[DOWN]
-	sort.Slice(filtered, func(i, j int) bool {
-		if upDown {
-			return filtered[i].Start.X < filtered[j].Start.X
-		}
-		return filtered[i].Start.Y < filtered[j].Start.Y
+	slices.SortFunc(filtered, func(l1, l2 Line) int {
+		return cmp.Compare(l1.fixed, l2.fixed)
 	})
 	return filtered
 }
