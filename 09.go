@@ -226,6 +226,7 @@ func main() {
 		p1, p2 := 0, 0
 
 		for i := 0; i < len(points)-1; i++ {
+		out:
 			for j := len(points) - 1; j > i; j-- {
 				testRect := RectFromCorners(points[i], points[j])
 				area := testRect.Area()
@@ -238,16 +239,12 @@ func main() {
 					continue
 				}
 
-				hasIntersection := false
 				for k := range outsideRects {
 					if testRect.Intersects(outsideRects[k]) {
-						hasIntersection = true
-						break
+						continue out
 					}
 				}
-				if !hasIntersection {
-					p2 = area
-				}
+				p2 = area
 			}
 		}
 
