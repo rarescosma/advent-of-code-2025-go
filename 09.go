@@ -171,18 +171,15 @@ func main() {
 
 			for len(queue) > 0 {
 				currentIval := queue[0]
-				queue = queue[1:]
 
 				oppLine := oppositeLines[oppositeIdx]
 				oppIval := oppLine.interval
 				if oppLine.fixed <= line.fixed || !currentIval.Intersects(oppIval) {
 					oppositeIdx++
-					queue = append(queue, currentIval)
 					continue
 				}
 
-				remaining := currentIval.Sub(oppIval)
-				queue = append(queue, remaining...)
+				queue = append(queue[1:], currentIval.Sub(oppIval)...)
 				overlap := currentIval.Common(oppIval)
 				toRemove := Ival{line.fixed, oppLine.fixed}
 
