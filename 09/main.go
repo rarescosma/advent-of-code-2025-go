@@ -29,17 +29,17 @@ func PtFromLine(line string) Pt {
 	return Pt{x, y}
 }
 
-type Ival struct {
+type Interval struct {
 	start, end int
 }
 
-func (iv Ival) Intersects(other Ival) bool {
+func (iv Interval) Intersects(other Interval) bool {
 	return min(iv.end, other.end) >= max(iv.start, other.start)
 }
 
-func (iv Ival) Sub(other Ival) []Ival {
+func (iv Interval) Sub(other Interval) []Interval {
 	if !iv.Intersects(other) {
-		return []Ival{iv}
+		return []Interval{iv}
 	}
 
 	common := iv.Common(other)
@@ -47,33 +47,33 @@ func (iv Ival) Sub(other Ival) []Ival {
 		return nil
 	}
 
-	ret := make([]Ival, 0, 2)
+	ret := make([]Interval, 0, 2)
 	if common.start > iv.start {
-		ret = append(ret, Ival{iv.start, common.start - 1})
+		ret = append(ret, Interval{iv.start, common.start - 1})
 	}
 	if common.end < iv.end {
-		ret = append(ret, Ival{common.end + 1, iv.end})
+		ret = append(ret, Interval{common.end + 1, iv.end})
 	}
 	return ret
 }
 
-func (iv Ival) Common(other Ival) Ival {
-	return Ival{max(iv.start, other.start), min(iv.end, other.end)}
+func (iv Interval) Common(other Interval) Interval {
+	return Interval{max(iv.start, other.start), min(iv.end, other.end)}
 }
 
 type Line struct {
-	interval Ival
+	interval Interval
 	fixed    int
 	dir      Dir
 }
 
 func LineFromPoints(p1, p2 Pt) Line {
-	var interval Ival
+	var interval Interval
 	var fixed int
 	var dir Dir
 
 	if p1.x == p2.x {
-		interval = Ival{min(p1.y, p2.y), max(p1.y, p2.y)}
+		interval = Interval{min(p1.y, p2.y), max(p1.y, p2.y)}
 		fixed = p1.x
 		if p2.y > p1.y {
 			dir = UP
@@ -81,7 +81,7 @@ func LineFromPoints(p1, p2 Pt) Line {
 			dir = DOWN
 		}
 	} else {
-		interval = Ival{min(p1.x, p2.x), max(p1.x, p2.x)}
+		interval = Interval{min(p1.x, p2.x), max(p1.x, p2.x)}
 		fixed = p1.y
 		if p2.x > p1.x {
 			dir = RIGHT
@@ -94,16 +94,16 @@ func LineFromPoints(p1, p2 Pt) Line {
 
 type Rect struct {
 	orig, end Pt
-	hIval     Ival
-	vIval     Ival
+	hIval     Interval
+	vIval     Interval
 }
 
 func RectFromCorners(c1, c2 Pt) Rect {
 	return Rect{
 		orig:  Pt{min(c1.x, c2.x), min(c1.y, c2.y)},
 		end:   Pt{max(c1.x, c2.x), max(c1.y, c2.y)},
-		hIval: Ival{min(c1.x, c2.x), max(c1.x, c2.x)},
-		vIval: Ival{min(c1.y, c2.y), max(c1.y, c2.y)},
+		hIval: Interval{min(c1.x, c2.x), max(c1.x, c2.x)},
+		vIval: Interval{min(c1.y, c2.y), max(c1.y, c2.y)},
 	}
 }
 
@@ -148,9 +148,9 @@ func main() {
 		linesByY[y] = append(linesByY[y], line)
 	}
 
-	outsideIvals := make([][]Ival, maxY+1)
+	outsideIvals := make([][]Interval, maxY+1)
 	for i := range outsideIvals {
-		outsideIvals[i] = []Ival{{0, maxX}}
+		outsideIvals[i] = []Interval{{0, maxX}}
 	}
 
 	inner := func(startDir Dir) {
@@ -166,7 +166,7 @@ func main() {
 		// so they can be subtracted from the "outside" intervals.
 		for idx := range len(startLines) {
 			line := startLines[idx]
-			queue := []Ival{line.interval}
+			queue := []Interval{line.interval}
 			oppositeIdx := 0
 
 			for len(queue) > 0 {
@@ -181,10 +181,10 @@ func main() {
 
 				queue = append(queue[1:], currentIval.Sub(oppIval)...)
 				overlap := currentIval.Common(oppIval)
-				toRemove := Ival{line.fixed, oppLine.fixed}
+				toRemove := Interval{line.fixed, oppLine.fixed}
 
 				for y := overlap.start; y <= overlap.end; y++ {
-					updated := make([]Ival, 0, len(outsideIvals[y])*2)
+					updated := make([]Interval, 0, len(outsideIvals[y])*2)
 					for _, outer := range outsideIvals[y] {
 						updated = append(updated, outer.Sub(toRemove)...)
 					}
@@ -207,7 +207,7 @@ func main() {
 		for y := 0; y <= maxY; y++ {
 			if lines, ok := linesByY[y]; ok {
 				for _, line := range lines {
-					updated := make([]Ival, 0, len(outsideIvals[y])*2)
+					updated := make([]Interval, 0, len(outsideIvals[y])*2)
 					for _, outer := range outsideIvals[y] {
 						updated = append(updated, outer.Sub(line.interval)...)
 					}
@@ -270,7 +270,7 @@ func main() {
 	inner(UP)
 }
 
-func equalIntervalSlices(a, b []Ival) bool {
+func equalIntervalSlices(a, b []Interval) bool {
 	if len(a) != len(b) {
 		return false
 	}
