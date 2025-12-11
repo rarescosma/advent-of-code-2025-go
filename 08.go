@@ -22,7 +22,6 @@ type JuncDist = int
 type DistMap = map[JuncDist][]JuncPair
 
 type CircuitIdx = int
-type CircuitMap = map[JuncIdx]CircuitIdx
 
 func main() {
 	takeDists := 1000
@@ -42,12 +41,12 @@ func main() {
 		juncIdx++
 	}
 
-	circuits := make(CircuitMap)
+	var circuits []CircuitIdx
 	for juncIdx := range juncs {
-		circuits[juncIdx] = juncIdx
+		circuits = append(circuits, juncIdx)
 	}
 
-	p1, p2, numDists, totalJuncs := 1, 0, 0, len(juncs)
+	p1, p2, numDists, numCircuits := 1, 0, 0, len(circuits)
 out:
 	for _, dist := range slices.Sorted(maps.Keys(distMap)) {
 		for _, pair := range distMap[dist] {
@@ -56,17 +55,13 @@ out:
 				continue
 			}
 
-			numJuncs := 0
 			for k, v := range circuits {
-				if v == c1 {
-					numJuncs++
-				}
 				if v == c2 {
 					circuits[k] = c1
-					numJuncs++
 				}
 			}
-			if numJuncs == totalJuncs {
+			numCircuits--
+			if numCircuits == 1 {
 				p2 = juncs[pair.left].x * juncs[pair.right].x
 				if numDists > takeDists {
 					break out
