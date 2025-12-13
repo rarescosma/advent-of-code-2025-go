@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
-type State = []int
-type Button = []int
+type State []int
+type Button []int
+type ButtonIdx = int
+type Combo []ButtonIdx
 
 func main() {
 	file, _ := os.Open("inputs/10.in")
@@ -38,7 +40,7 @@ func main() {
 			buttons[i] = intsPlease(s)
 		}
 
-		parityMap := make(map[uint64][][]int)
+		parityMap := make(map[uint64][]Combo)
 		p1 += p1Solve(p1Goal, buttons, &parityMap)
 
 		cache := make(map[uint64]int)
@@ -50,19 +52,19 @@ func main() {
 	println("p2:", p2)
 }
 
-func p1Solve(goal State, buttons []Button, parityMap *map[uint64][]Button) int {
+func p1Solve(goal State, buttons []Button, parityMap *map[uint64][]Combo) int {
 	nButtons := len(buttons)
 	limit := 1 << nButtons
 	ret := math.MaxInt
 
-	currentParity := make([]int, len(goal))
+	currentParity := make(State, len(goal))
 
 	for i := 0; i < limit; i++ {
 		for k := range currentParity {
 			currentParity[k] = 0
 		}
 
-		var bits []int
+		var bits Combo
 
 		for bit := 0; bit < nButtons; bit++ {
 			if (i & (1 << bit)) != 0 {
@@ -78,13 +80,13 @@ func p1Solve(goal State, buttons []Button, parityMap *map[uint64][]Button) int {
 			ret = numBits
 		}
 
-		h := hashState(currentParity)
-		(*parityMap)[h] = append((*parityMap)[h], bits)
+		key := hashState(currentParity)
+		(*parityMap)[key] = append((*parityMap)[key], bits)
 	}
 	return ret
 }
 
-func p2Solve(goal State, buttons []Button, parityMap map[uint64][]Button, cache map[uint64]int) int {
+func p2Solve(goal State, buttons []Button, parityMap map[uint64][]Combo, cache map[uint64]int) int {
 	key := hashState(goal)
 	if res, ok := cache[key]; ok {
 		return res
@@ -92,7 +94,7 @@ func p2Solve(goal State, buttons []Button, parityMap map[uint64][]Button, cache 
 
 	ret := math.MaxInt
 
-	nextGoal := make([]int, len(goal))
+	nextGoal := make(State, len(goal))
 out:
 	for _, bits := range parityMap[hashParity(goal)] {
 		copy(nextGoal, goal)
