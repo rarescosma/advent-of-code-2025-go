@@ -1,16 +1,6 @@
-package main
+package lib
 
-import (
-	"bufio"
-	"container/heap"
-	"os"
-	"strconv"
-	"strings"
-)
-
-type P1State = int
-
-type Move []int
+import "container/heap"
 
 type Item[S comparable] struct {
 	state S
@@ -51,48 +41,11 @@ func (pq *PriorityQueue[S]) Pop() any {
 	return item
 }
 
-func main() {
-	file, _ := os.Open("inputs/10.in")
-
-	scanner := bufio.NewScanner(file)
-	p1 := 0
-	for scanner.Scan() {
-		line := scanner.Text()[1:]
-		line = line[:len(line)-1]
-		parts := strings.Split(line, "] (")
-		p1Goal := 0
-		for i, c := range parts[0] {
-			if c == '#' {
-				p1Goal = p1Goal + (1 << i)
-			}
-		}
-
-		parts = strings.Split(parts[1], ") {")
-
-		var p1moves []Move
-		for _, part := range strings.Split(parts[0], ") (") {
-			p1moves = append(p1moves, intsPlease(part))
-		}
-
-		p1 += dijsktra(0, p1Goal, p1moves, transformP1)
-	}
-
-	println("p1:", p1)
-}
-
-func transformP1(state *P1State, move Move) P1State {
-	ret := *state
-	for _, pos := range move {
-		ret ^= 1 << pos
-	}
-	return ret
-}
-
-func dijsktra[S comparable](
+func Dijsktra[S comparable, M any](
 	state S,
 	goal S,
-	moves []Move,
-	transform func(s *S, m Move) S,
+	moves []M,
+	transform func(s *S, m M) S,
 ) int {
 	known, pq := make(map[S]int), make(PriorityQueue[S], 1)
 
@@ -118,18 +71,4 @@ func dijsktra[S comparable](
 		}
 	}
 	return -1
-}
-
-func intsPlease(s string) []int {
-	return nonEmpties(s, func(s string) int { res, _ := strconv.Atoi(s); return res })
-}
-
-func nonEmpties[T any](s string, f func(string) T) []T {
-	var ret []T
-	for _, el := range strings.Split(s, ",") {
-		if el != "" {
-			ret = append(ret, f(el))
-		}
-	}
-	return ret
 }
