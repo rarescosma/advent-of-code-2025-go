@@ -16,7 +16,7 @@ build: ## Build all days and place binaries under ./bin
 	@bash -c 'for d in $$(seq -f "%02g" 1 $(DAYS)); do go build -o bin/$$d $$d/main.go; done'
 
 run: ## Timed run of all days
-	@bash -c 'for d in $$(seq -f "%02g" 1 9); do echo -e "+--------+\n| Day $$d |\n+--------+"; time ./bin/$$d; echo; done'
+	@bash -c 'for d in $$(seq -f "%02g" 1 $(DAYS)); do echo -e "+--------+\n| Day $$d |\n+--------+"; time ./bin/$$d; echo; done'
 
 scaffold: ## Scaffold a day, prefix it with DAYS=xx
 	@mkdir -p ./$(DAY)
