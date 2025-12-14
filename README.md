@@ -1,4 +1,4 @@
-# 🎄 Advent of Code 2025 in Golang 🎄
+# 🎄 Advent of Code 2025 in Golang 🐿️
 
 ## Targets
 
