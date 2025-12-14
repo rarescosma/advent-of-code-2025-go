@@ -18,7 +18,7 @@ lint       Run linters and checkers
 
 ## Inputs
 
-Inputs for each problem are expected in the `./inputs/xx.in` files, where `xx` is the 2-digit, zero-padded day number.
+Each puzzle expects its input at the path `./inputs/xx.in`, where `xx` is the 2-digit, zero-padded day number.
 
 ## Benchmarks
 
