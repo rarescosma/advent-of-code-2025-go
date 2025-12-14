@@ -90,17 +90,20 @@ func LineFromPoints(p1, p2 Pt) Line {
 }
 
 type Rect struct {
-	orig, end Pt
-	hIval     Interval
-	vIval     Interval
+	orig, end    Pt
+	hIval, vIval Interval
+	area         int
 }
 
 func RectFromCorners(c1, c2 Pt) Rect {
+	hIval := Interval{min(c1.x, c2.x), max(c1.x, c2.x)}
+	vIval := Interval{min(c1.y, c2.y), max(c1.y, c2.y)}
 	return Rect{
-		orig:  Pt{min(c1.x, c2.x), min(c1.y, c2.y)},
-		end:   Pt{max(c1.x, c2.x), max(c1.y, c2.y)},
-		hIval: Interval{min(c1.x, c2.x), max(c1.x, c2.x)},
-		vIval: Interval{min(c1.y, c2.y), max(c1.y, c2.y)},
+		orig:  Pt{hIval.start, vIval.start},
+		end:   Pt{hIval.end, vIval.end},
+		hIval: hIval,
+		vIval: vIval,
+		area:  (hIval.end - hIval.start + 1) * (vIval.end - vIval.start + 1),
 	}
 }
 
@@ -229,28 +232,41 @@ func main() {
 			startY = endY
 		}
 
-		p1, p2 := 0, 0
+		p1 := 0
+		var rects []Rect
 
 		for i := 0; i < len(points)-1; i++ {
-		out:
 			for j := len(points) - 1; j > i; j-- {
 				testRect := RectFromCorners(points[i], points[j])
-				area := testRect.Area()
-
-				if area > p1 {
-					p1 = area
+				rects = append(rects, testRect)
+				if testRect.area > p1 {
+					p1 = testRect.area
 				}
+			}
+		}
 
-				if area <= p2 {
+		mp := lib.MakeMp(512, rects, func(chunk []Rect) int {
+			maxArea := 0
+
+		out:
+			for _, testRect := range chunk {
+				if testRect.area < maxArea {
 					continue
 				}
-
 				for k := range outsideRects {
 					if testRect.Intersects(outsideRects[k]) {
 						continue out
 					}
 				}
-				p2 = area
+				maxArea = testRect.area
+			}
+			return maxArea
+		})
+
+		p2 := 0
+		for res := range mp.Go() {
+			if res > p2 {
+				p2 = res
 			}
 		}
 

@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"math"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -13,12 +14,19 @@ type Button []int
 type ButtonIdx = int
 type Combo []ButtonIdx
 
+type Problem struct {
+	p1Goal, p2Goal State
+	buttons        []Button
+}
+
+type Ans struct{ p1, p2 int }
+
 func main() {
 	file, _ := os.Open("inputs/10.in")
 
 	scanner := bufio.NewScanner(file)
 
-	p1, p2 := 0, 0
+	var problems []Problem
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -39,15 +47,27 @@ func main() {
 		for i, s := range buttonParts {
 			buttons[i] = lib.IntsPlease(s, ",")
 		}
-
-		parityMap := make(map[uint64][]Combo)
-		p1 += p1Solve(p1Goal, buttons, &parityMap)
-
-		cache := make(map[uint64]int)
-		cache[hashState(make(State, len(p2Goal)))] = 0
-		p2 += p2Solve(p2Goal, buttons, parityMap, cache)
+		problems = append(problems, Problem{p1Goal, p2Goal, buttons})
 	}
 
+	mp := lib.MakeMp(runtime.NumCPU(), problems, func(chunk []Problem) Ans {
+		p1, p2 := 0, 0
+		for _, problem := range chunk {
+			parityMap := make(map[uint64][]Combo)
+			p1 += p1Solve(problem.p1Goal, problem.buttons, &parityMap)
+
+			cache := make(map[uint64]int)
+			cache[hashState(make(State, len(problem.p2Goal)))] = 0
+			p2 += p2Solve(problem.p2Goal, problem.buttons, parityMap, cache)
+		}
+		return Ans{p1, p2}
+	})
+
+	p1, p2 := 0, 0
+	for ans := range mp.Go() {
+		p1 += ans.p1
+		p2 += ans.p2
+	}
 	println("p1:", p1)
 	println("p2:", p2)
 }
