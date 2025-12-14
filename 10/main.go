@@ -1,10 +1,10 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"math"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -32,12 +32,12 @@ func main() {
 		}
 
 		parts = strings.Split(parts[1], ") {")
-		p2Goal := intsPlease(parts[1])
+		p2Goal := lib.IntsPlease(parts[1], ",")
 
 		buttonParts := strings.Split(parts[0], ") (")
 		buttons := make([]Button, len(buttonParts))
 		for i, s := range buttonParts {
-			buttons[i] = intsPlease(s)
+			buttons[i] = lib.IntsPlease(s, ",")
 		}
 
 		parityMap := make(map[uint64][]Combo)
@@ -155,13 +155,4 @@ func stateEq(s1, s2 State) bool {
 		}
 	}
 	return true
-}
-
-func intsPlease(s string) []int {
-	var ret []int
-	for _, el := range strings.Split(s, ",") {
-		val, _ := strconv.Atoi(el)
-		ret = append(ret, val)
-	}
-	return ret
 }

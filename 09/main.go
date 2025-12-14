@@ -1,12 +1,11 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"cmp"
 	"os"
 	"slices"
-	"strconv"
-	"strings"
 )
 
 type Dir int
@@ -23,10 +22,8 @@ type Pt struct {
 }
 
 func PtFromLine(line string) Pt {
-	parts := strings.Split(line, ",")
-	x, _ := strconv.Atoi(parts[0])
-	y, _ := strconv.Atoi(parts[1])
-	return Pt{x, y}
+	ints := lib.IntsPlease(line, ",")
+	return Pt{ints[0], ints[1]}
 }
 
 type Interval struct {

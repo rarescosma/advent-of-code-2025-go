@@ -4,66 +4,9 @@ import (
 	"aoc_2025/lib"
 	"bufio"
 	"os"
-	"strconv"
 	"strings"
 	"unicode"
 )
-
-func scanFile(f string) *bufio.Scanner {
-	file, _ := os.Open(f)
-	return bufio.NewScanner(file)
-}
-
-func parseInput(scanner *bufio.Scanner) (lib.Map[int], []string) {
-	var buf [][]int
-	var ops string
-	parsingNums := true
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line[0] == '*' || line[0] == '+' {
-			parsingNums = false
-		}
-		if parsingNums {
-			buf = append(buf, intsPlease(line))
-		} else {
-			ops = scanner.Text()
-			break
-		}
-	}
-	return lib.Map[int]{Buf: buf, NumRows: len(buf), NumCols: len(buf[0])}, opsPlease(ops)
-}
-
-func intsPlease(s string) []int {
-	return nonEmpties(s, func(s string) int { res, _ := strconv.Atoi(s); return res })
-}
-
-func opsPlease(s string) []string {
-	return nonEmpties(s, func(s string) string { return s })
-}
-
-func nonEmpties[T any](s string, f func(string) T) []T {
-	var ret []T
-	for _, el := range strings.Split(s, " ") {
-		if el != "" {
-			ret = append(ret, f(el))
-		}
-	}
-	return ret
-}
-
-func solve(terms []int, op string) int {
-	ret := 0
-	apply := func(a, b int) int { return a + b }
-	if op == "*" {
-		ret = 1
-		apply = func(a, b int) int { return a * b }
-	}
-	for _, term := range terms {
-		ret = apply(ret, term)
-	}
-	return ret
-}
 
 func main() {
 	fName := "inputs/06.in"
@@ -92,11 +35,58 @@ func main() {
 			terms = []int{}
 			idx++
 		} else {
-			term, _ := strconv.Atoi(row)
-			terms = append(terms, term)
+			terms = append(terms, lib.IntPlease(row))
 		}
 	}
 	p2 += solve(terms, ops[idx])
 
 	println("p2:", p2)
+}
+
+func scanFile(f string) *bufio.Scanner {
+	file, _ := os.Open(f)
+	return bufio.NewScanner(file)
+}
+
+func parseInput(scanner *bufio.Scanner) (lib.Map[int], []string) {
+	var buf [][]int
+	var ops string
+	parsingNums := true
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line[0] == '*' || line[0] == '+' {
+			parsingNums = false
+		}
+		if parsingNums {
+			buf = append(buf, lib.IntsPlease(line, " "))
+		} else {
+			ops = scanner.Text()
+			break
+		}
+	}
+	return lib.Map[int]{Buf: buf, NumRows: len(buf), NumCols: len(buf[0])}, opsPlease(ops)
+}
+
+func opsPlease(s string) []string {
+	var ret []string
+	for _, el := range strings.Split(s, " ") {
+		if el != "" {
+			ret = append(ret, el)
+		}
+	}
+	return ret
+}
+
+func solve(terms []int, op string) int {
+	ret := 0
+	apply := func(a, b int) int { return a + b }
+	if op == "*" {
+		ret = 1
+		apply = func(a, b int) int { return a * b }
+	}
+	for _, term := range terms {
+		ret = apply(ret, term)
+	}
+	return ret
 }

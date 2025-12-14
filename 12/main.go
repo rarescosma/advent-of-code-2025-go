@@ -1,9 +1,9 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -29,14 +29,13 @@ func main() {
 		}
 
 		parts := strings.Split(line, ": ")
-		hw := strings.Split(parts[0], "x")
-		h, w := intPlease(hw[0]), intPlease(hw[1])
+		hw := lib.IntsPlease(parts[0], "x")
 		var blocks []int
 		for _, b := range strings.Split(parts[1], " ") {
-			blocks = append(blocks, intPlease(b))
+			blocks = append(blocks, lib.IntPlease(b))
 		}
 
-		area := h * w
+		area := hw[0] * hw[1]
 		bArea := 0
 		for i, bNum := range blocks {
 			bArea += bNum * shapes[i]
@@ -46,9 +45,4 @@ func main() {
 		}
 	}
 	println("p1:", p1)
-}
-
-func intPlease(s string) int {
-	ret, _ := strconv.Atoi(s)
-	return ret
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -37,9 +37,8 @@ func main() {
 			defer wg.Done()
 
 			p1, p2 := 0, 0
-			parts := strings.Split(rng, "-")
-			beg, _ := strconv.Atoi(parts[0])
-			end, _ := strconv.Atoi(parts[1])
+			ints := lib.IntsPlease(rng, "-")
+			beg, end := ints[0], ints[1]
 
 			for x := beg; x <= end; x++ {
 				numDigits, p2Found := fastDigits(x), false

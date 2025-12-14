@@ -1,12 +1,11 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"os"
 	"slices"
 	"sort"
-	"strconv"
-	"strings"
 )
 
 type Junc struct {
@@ -151,13 +150,7 @@ done:
 }
 
 func getJunc(s string) Junc {
-	var coords []int
-	for _, el := range strings.Split(s, ",") {
-		if el != "" {
-			coord, _ := strconv.Atoi(el)
-			coords = append(coords, coord)
-		}
-	}
+	coords := lib.IntsPlease(s, ",")
 	return Junc{coords[0], coords[1], coords[2]}
 }
 

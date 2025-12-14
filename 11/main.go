@@ -6,32 +6,6 @@ import (
 	"strings"
 )
 
-func numPathsCached(
-	cache *map[string]int,
-	rev *map[string][]string,
-	from, to string,
-	exclude *map[string]bool,
-) int {
-	if to == from {
-		return 1
-	}
-
-	if ret, ok := (*cache)[to]; ok {
-		return ret
-	}
-
-	ret := 0
-	for _, prev := range (*rev)[to] {
-		if (*exclude)[prev] {
-			continue
-		}
-		ret += numPathsCached(cache, rev, from, prev, exclude)
-	}
-
-	(*cache)[to] = ret
-	return ret
-}
-
 type Graph struct {
 	rev map[string][]string
 }
@@ -75,4 +49,30 @@ func main() {
 	}
 
 	println("p2:", p2)
+}
+
+func numPathsCached(
+	cache *map[string]int,
+	rev *map[string][]string,
+	from, to string,
+	exclude *map[string]bool,
+) int {
+	if to == from {
+		return 1
+	}
+
+	if ret, ok := (*cache)[to]; ok {
+		return ret
+	}
+
+	ret := 0
+	for _, prev := range (*rev)[to] {
+		if (*exclude)[prev] {
+			continue
+		}
+		ret += numPathsCached(cache, rev, from, prev, exclude)
+	}
+
+	(*cache)[to] = ret
+	return ret
 }

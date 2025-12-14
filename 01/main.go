@@ -1,9 +1,9 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"os"
-	"strconv"
 )
 
 type Dial struct {
@@ -46,7 +46,7 @@ func main() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		direction := line[0]
-		spin, _ := strconv.Atoi(line[1:])
+		spin := lib.IntPlease(line[1:])
 
 		if direction == 'R' {
 			p2 += dial.SpinRight(spin)

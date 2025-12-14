@@ -1,9 +1,9 @@
 package main
 
 import (
+	"aoc_2025/lib"
 	"bufio"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -18,11 +18,6 @@ func (i *Interval) contains(num uint64) bool {
 
 func (i *Interval) length() uint64 {
 	return i.end - i.start + 1
-}
-
-func intPlease(s string) uint64 {
-	ret, _ := strconv.ParseUint(s, 10, 0)
-	return ret
 }
 
 func main() {
@@ -40,10 +35,10 @@ func main() {
 			continue
 		}
 		if parsingRanges {
-			parts := strings.Split(line, "-")
-			intervals = append(intervals, Interval{intPlease(parts[0]), intPlease(parts[1])})
+			ints := lib.UIntsPlease(line, "-")
+			intervals = append(intervals, Interval{ints[0], ints[1]})
 		} else {
-			nums = append(nums, intPlease(line))
+			nums = append(nums, lib.UIntPlease(line))
 		}
 	}
 
