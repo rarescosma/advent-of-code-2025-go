@@ -18,6 +18,9 @@ build: ## Build all days and place binaries under ./bin
 run: ## Timed run of all days
 	@bash -c 'for d in $$(seq -f "%02g" 1 $(DAYS)); do echo -e "+--------+\n| Day $$d |\n+--------+"; time ./bin/$$d; echo; done'
 
+hyper: ## Hyperfine benckmark of all days
+	@bash -c 'for d in $$(seq -f "%02g" 1 $(DAYS)); do echo -e "+--------+\n| Day $$d |\n+--------+"; hyperfine -N --style basic ./bin/$$d 2>/dev/null; echo; done'
+
 scaffold: ## Scaffold a day, prefix it with DAYS=xx
 	@mkdir -p ./$(DAY)
 	@touch ./inputs/$(DAY).ex
