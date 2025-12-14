@@ -9,8 +9,7 @@ import (
 func numPathsCached(
 	cache *map[string]int,
 	rev *map[string][]string,
-	from string,
-	to string,
+	from, to string,
 	exclude *map[string]bool,
 ) int {
 	if to == from {
@@ -33,10 +32,23 @@ func numPathsCached(
 	return ret
 }
 
+type Graph struct {
+	rev map[string][]string
+}
+
+func (g *Graph) numPaths(from, to string, exclude []string) int {
+	cache := make(map[string]int)
+	var excludeSet = make(map[string]bool, len(exclude))
+	for _, el := range exclude {
+		excludeSet[el] = true
+	}
+	return numPathsCached(&cache, &g.rev, from, to, &excludeSet)
+}
+
 func main() {
 	file, _ := os.Open("inputs/11.in")
 
-	rev := make(map[string][]string)
+	g := Graph{make(map[string][]string)}
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -44,28 +56,23 @@ func main() {
 		parts := strings.Split(line, ": ")
 		from := parts[0]
 		for _, to := range strings.Split(parts[1], " ") {
-			rev[to] = append(rev[to], from)
+			g.rev[to] = append(g.rev[to], from)
 		}
 	}
 
-	var cache = make(map[string]int)
-	p1 := numPathsCached(&cache, &rev, "you", "out", &map[string]bool{})
+	p1 := g.numPaths("you", "out", []string{})
 	println("p1:", p1)
 
-	cache = make(map[string]int)
-	sd := numPathsCached(&cache, &rev, "svr", "dac", &map[string]bool{"out": true, "fft": true})
-	cache = make(map[string]int)
-	df := numPathsCached(&cache, &rev, "dac", "fft", &map[string]bool{"out": true, "svr": true})
-	cache = make(map[string]int)
-	fo := numPathsCached(&cache, &rev, "fft", "out", &map[string]bool{"dac": true, "svr": true})
+	var p2 int
+	fd := g.numPaths("fft", "dac", []string{"out", "svr"})
+	if fd == 0 {
+		p2 = g.numPaths("svr", "dac", []string{"out", "fft"}) *
+			g.numPaths("dac", "fft", []string{"out", "svr"}) *
+			g.numPaths("fft", "out", []string{"dac", "svr"})
+	} else {
+		p2 = fd * g.numPaths("svr", "fft", []string{"out", "dac"}) *
+			g.numPaths("dac", "out", []string{"fft", "svr"})
+	}
 
-	cache = make(map[string]int)
-	sf := numPathsCached(&cache, &rev, "svr", "fft", &map[string]bool{"out": true, "dac": true})
-	cache = make(map[string]int)
-	fd := numPathsCached(&cache, &rev, "fft", "dac", &map[string]bool{"out": true, "svr": true})
-	cache = make(map[string]int)
-	do := numPathsCached(&cache, &rev, "dac", "out", &map[string]bool{"fft": true, "svr": true})
-
-	p2 := sd*df*fo + sf*fd*do
 	println("p2:", p2)
 }
