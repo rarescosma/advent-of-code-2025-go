@@ -10,15 +10,24 @@ import (
 func main() {
 	file, _ := os.Open("inputs/12.in")
 
-	bSizes := []int{7, 7, 6, 7, 7, 5}
-
 	scanner := bufio.NewScanner(file)
 	p1 := 0
+
+	var acc = 0
+	var shapes []int
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.Contains(line, "x") {
+			if strings.TrimSpace(line) == "" {
+				shapes = append(shapes, acc)
+				acc = 0
+			} else {
+				acc += strings.Count(line, "#")
+			}
 			continue
 		}
+
 		parts := strings.Split(line, ": ")
 		hw := strings.Split(parts[0], "x")
 		h, w := intPlease(hw[0]), intPlease(hw[1])
@@ -30,7 +39,7 @@ func main() {
 		area := h * w
 		bArea := 0
 		for i, bNum := range blocks {
-			bArea += bNum * bSizes[i]
+			bArea += bNum * shapes[i]
 		}
 		if bArea < area {
 			p1 += 1
