@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"cmp"
 	"os"
+	"runtime"
 	"slices"
 	"sync/atomic"
 )
@@ -248,7 +249,7 @@ func main() {
 
 		var p2 atomic.Int32
 
-		pool := lib.NewPool(512, rects, func(chunk []Rect) bool {
+		pool := lib.NewPool(runtime.NumCPU(), rects, func(chunk []Rect) bool {
 
 		out:
 			for _, testRect := range chunk {
