@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"os"
 	"slices"
+	"sync/atomic"
 )
 
 type Dir int
@@ -92,7 +93,7 @@ func LineFromPoints(p1, p2 Pt) Line {
 type Rect struct {
 	orig, end    Pt
 	hIval, vIval Interval
-	area         int
+	area         int32
 }
 
 func RectFromCorners(c1, c2 Pt) Rect {
@@ -103,7 +104,7 @@ func RectFromCorners(c1, c2 Pt) Rect {
 		end:   Pt{hIval.end, vIval.end},
 		hIval: hIval,
 		vIval: vIval,
-		area:  (hIval.end - hIval.start + 1) * (vIval.end - vIval.start + 1),
+		area:  int32((hIval.end - hIval.start + 1) * (vIval.end - vIval.start + 1)),
 	}
 }
 
@@ -232,7 +233,7 @@ func main() {
 			startY = endY
 		}
 
-		p1 := 0
+		p1 := int32(0)
 		var rects []Rect
 
 		for i := 0; i < len(points)-1; i++ {
@@ -245,12 +246,13 @@ func main() {
 			}
 		}
 
-		mp := lib.MakeMp(512, rects, func(chunk []Rect) int {
-			maxArea := 0
+		var p2 atomic.Int32
+
+		mp := lib.MakeMp(512, rects, func(chunk []Rect) bool {
 
 		out:
 			for _, testRect := range chunk {
-				if testRect.area < maxArea {
+				if testRect.area < p2.Load() {
 					continue
 				}
 				for k := range outsideRects {
@@ -258,20 +260,16 @@ func main() {
 						continue out
 					}
 				}
-				maxArea = testRect.area
+				p2.Store(testRect.area)
 			}
-			return maxArea
+			return true
 		})
 
-		p2 := 0
-		for res := range mp.Go() {
-			if res > p2 {
-				p2 = res
-			}
+		for range mp.Go() {
 		}
 
 		println("p1:", p1)
-		println("p2:", p2)
+		println("p2:", p2.Load())
 	}
 
 	defer func() {

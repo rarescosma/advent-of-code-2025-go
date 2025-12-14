@@ -103,8 +103,8 @@ Benchmark 1: ./bin/08
 | Day 09 |
 +--------+
 Benchmark 1: ./bin/09
-  Time (mean ± σ):      28.4 ms ±   2.0 ms    [User: 150.6 ms, System: 8.8 ms]
-  Range (min … max):    24.0 ms …  36.8 ms    104 runs
+  Time (mean ± σ):      22.9 ms ±   1.9 ms    [User: 54.2 ms, System: 8.7 ms]
+  Range (min … max):    17.9 ms …  30.5 ms    120 runs
 
 
 +--------+
