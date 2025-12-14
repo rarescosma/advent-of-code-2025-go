@@ -50,7 +50,7 @@ func main() {
 		problems = append(problems, Problem{p1Goal, p2Goal, buttons})
 	}
 
-	mp := lib.MakeMp(runtime.NumCPU(), problems, func(chunk []Problem) Ans {
+	pool := lib.NewPool(runtime.NumCPU(), problems, func(chunk []Problem) Ans {
 		p1, p2 := 0, 0
 		for _, problem := range chunk {
 			parityMap := make(map[uint64][]Combo)
@@ -64,7 +64,7 @@ func main() {
 	})
 
 	p1, p2 := 0, 0
-	for ans := range mp.Go() {
+	for ans := range pool.Go() {
 		p1 += ans.p1
 		p2 += ans.p2
 	}

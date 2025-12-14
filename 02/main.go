@@ -20,7 +20,7 @@ func main() {
 	ranges := strings.Split(strings.TrimSpace(string(file)), ",")
 	nRanges := len(ranges)
 
-	mp := lib.MakeMp(nRanges, ranges, func(chunk []string) Ans {
+	pool := lib.NewPool(nRanges, ranges, func(chunk []string) Ans {
 		rng := chunk[0]
 		p1, p2 := 0, 0
 		ints := lib.IntsPlease(rng, "-")
@@ -47,9 +47,9 @@ func main() {
 	})
 
 	p1, p2 := 0, 0
-	for result := range mp.Go() {
-		p1 += result.p1
-		p2 += result.p2
+	for ans := range pool.Go() {
+		p1 += ans.p1
+		p2 += ans.p2
 	}
 	println("p1:", p1)
 	println("p2:", p2)

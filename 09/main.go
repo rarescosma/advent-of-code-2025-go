@@ -248,7 +248,7 @@ func main() {
 
 		var p2 atomic.Int32
 
-		mp := lib.MakeMp(512, rects, func(chunk []Rect) bool {
+		pool := lib.NewPool(512, rects, func(chunk []Rect) bool {
 
 		out:
 			for _, testRect := range chunk {
@@ -265,7 +265,7 @@ func main() {
 			return true
 		})
 
-		for range mp.Go() {
+		for range pool.Go() {
 		}
 
 		println("p1:", p1)
